@@ -1,134 +1,152 @@
-# 🚀 SimpleStorage DApp na Starknet
+# 🏢 Starknet Apartment Reservation DApp
 
 ![Starknet](https://img.shields.io/badge/Starknet-Blockchain-6353FF?style=flat-square)
 ![Testnet](https://img.shields.io/badge/Network-Testnet-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
-Um guia completo para **deploy do contrato `SimpleStorage`** na Starknet e integração com o frontend.
+Guia completo para **deploy dos contratos `ReservationManager` e `ApartmentRegistry`** na Starknet e configuração do frontend do seu sistema de reservas de apartamentos.
 
 ---
 
 ## 📋 Pré-requisitos
 
-Antes de começar, tenha:
-
-- Contrato compilado em `target/dev/`
+- Contratos compilados em `target/dev/`
 - Ferramentas Starknet instaladas (CLI / Foundry)
 - Wallet com ETH para taxas de transação
+- Node.js e npm instalados para rodar o frontend
 
 ---
 
-## 🔧 Deploy do Contrato
+## 🔧 Deploy dos Contratos
+
+Você possui dois contratos principais: 
+
+- **ApartmentRegistry**: Registra apartamentos, seus preços e proprietários.  
+- **ReservationManager**: Gerencia reservas de apartamentos.
 
 ### 🛠️ Opção 1: Starknet CLI
 
 ```bash
-curl https://get.starknet.sh -o starknet.sh
-chmod +x starknet.sh
-./starknet.sh
-
+# Deploy do ApartmentRegistry
 starknet deploy \
-  --contract target/dev/meu_projeto_meu_contrato.compiled_contract_class.json \
+  --contract target/dev/apartment_registry.compiled_contract_class.json \
   --network testnet
-💡 Dica: Anote o endereço do contrato retornado, será necessário no frontend.
+
+# Deploy do ReservationManager (precisa do endereço do registry)
+starknet deploy \
+  --contract target/dev/reservation_manager.compiled_contract_class.json \
+  --network testnet \
+  --constructor-args <REGISTRY_CONTRACT_ADDRESS>
+💡 Dica: Anote os endereços retornados dos dois contratos.
 
 🌐 Opção 2: Starkscan Deploy
 Acesse Starkscan Deploy
 
-Faça upload do arquivo .compiled_contract_class.json
+Faça upload dos arquivos .compiled_contract_class.json
 
 Conecte sua wallet e confirme o deploy
 
-Anote o endereço do contrato
+Anote os endereços dos contratos
 
 ⚡ Opção 3: Starknet Foundry (snforge)
 bash
 Copiar código
 snforge init
 
+# Deploy ApartmentRegistry
 snforge deploy \
-  --contract target/dev/meu_projeto_meu_contrato.compiled_contract_class.json \
+  --contract target/dev/apartment_registry.compiled_contract_class.json \
   --network testnet
-Exemplo de endereço retornado:
 
-Copiar código
-0x115e7bdbae000129b3bb5216b6e89f0e2d99df95656a2a3553eafbf23ae62319
+# Deploy ReservationManager com referência ao registry
+snforge deploy \
+  --contract target/dev/reservation_manager.compiled_contract_class.json \
+  --network testnet \
+  --constructor-args <REGISTRY_CONTRACT_ADDRESS>
+🏗️ Funções Principais
+ApartmentRegistry
+register_apartment(apartment_id, price, owner_id)
+Registra um novo apartamento no sistema.
+
+get_apartment(apartment_id)
+Retorna os detalhes de um apartamento específico.
+
+📌 Evento: ApartmentRegistered
+
+ReservationManager
+reserve_apartment(apartment_id, start_date, end_date)
+Cria uma nova reserva, verificando conflitos de datas.
+
+get_reservations(apartment_id)
+Retorna todas as reservas de um apartamento.
+
+📌 Evento: ApartmentReserved
+
 🖥️ Configuração do Frontend
 Abra:
 
 text
 Copiar código
 frontend/src/hooks/useStarknet.ts
-Substitua o endereço do contrato:
+Atualize os endereços dos contratos:
 
 ts
 Copiar código
-const CONTRACT_ADDRESS = 'SEU_ENDERECO_AQUI';
-Exemplo:
+const APARTMENT_REGISTRY_ADDRESS = '<ENDERECO_DO_REGISTRY>';
+const RESERVATION_MANAGER_ADDRESS = '<ENDERECO_DO_RESERVATION>';
+Inicie o frontend:
 
-ts
+bash
 Copiar código
-const CONTRACT_ADDRESS = '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+cd frontend
+npm install
+npm start
 🌐 Redes Disponíveis
 Rede	RPC URL	Chain ID	Explorer
 Testnet	Blast API	SN_SEPOLIA	Starkscan Testnet
 Mainnet	Blast API	SN_MAIN	Starkscan Mainnet
 
 💸 Obter ETH para Testnet
-Faucet Starknet: Acesse aqui
+Faucet Starknet: Clique aqui
 
-Conecte sua wallet
+Bridge Ethereum → Starknet: Starkgate
 
-Solicite ETH de teste
-
-Bridge do Ethereum: Starkgate
-Faça bridge de ETH Goerli para Starknet Testnet
-
-✅ Verificação do DApp
-Inicie o frontend:
-
-bash
-Copiar código
-cd frontend
-npm start
-Teste:
-
+✅ Testando o DApp
 Conecte sua wallet (Argent/Braavos)
 
-Defina um valor no SimpleStorage
+Cadastre apartamentos usando ApartmentRegistry
 
-Confira se o valor foi armazenado
+Faça reservas usando ReservationManager
 
-Verifique no explorer:
-Starkscan → procure pelo endereço do contrato → confira transações
+Verifique se os eventos aparecem e os dados são retornados corretamente
+
+Confira as transações no Starkscan
 
 🛠️ Solução de Problemas
 Erro de Conectividade
-Confirme a rede (Testnet/Mainnet)
+Rede correta (Testnet/Mainnet)
 
-Verifique o endereço do contrato
+Endereços dos contratos corretos
 
-Teste com nova wallet ou instância
+Testar nova wallet
 
 Erro de Transação
-Verifique se há ETH suficiente
+ETH suficiente para taxas
 
-Confirme se o contrato foi deployado corretamente
+Contratos deployados corretamente
 
-Confira logs no console do navegador
+Logs do console do navegador
 
 Erro de ABI
-Confirme se a ABI corresponde ao contrato
+Confirme se a ABI do frontend bate com a do contrato
 
-Recompile se necessário
-
-Verifique se o arquivo .json está correto
+Recompile contratos se necessário
 
 📞 Suporte e Referências
-Documentação Oficial Starknet
+Documentação Starknet
 
-Teste sempre em Testnet antes da Mainnet
+Sempre teste em Testnet antes de Mainnet
 
-Confira logs e dependências do frontend
+Verifique logs e dependências do frontend
 
-🎉 Parabéns! Seu DApp SimpleStorage na Starknet está pronto para uso!
+🎉 Parabéns! Seu sistema de reservas de apartamentos na Starknet está pronto para uso!
